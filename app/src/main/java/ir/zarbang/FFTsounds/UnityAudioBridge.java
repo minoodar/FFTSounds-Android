@@ -1,4 +1,5 @@
-package ir.zarbang.FFTsounds.bridge;
+// CORRECTED: Package declaration now matches the file's directory structure.
+package ir.zarbang.FFTsounds;
 
 import android.content.ComponentName;
 import android.content.Context;
