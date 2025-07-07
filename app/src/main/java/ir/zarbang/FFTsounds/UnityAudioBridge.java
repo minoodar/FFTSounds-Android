@@ -1,5 +1,4 @@
-// CORRECTED: Package declaration now matches the file's directory structure.
-package ir.zarbang.FFTsounds;
+package ir.zarbang.FFTsounds.bridge;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -30,10 +29,8 @@ import ir.zarbang.FFTsounds.service.PlaybackService;
 public class UnityAudioBridge {
 
     private static final String TAG = "UnityAudioBridge";
-    // The instance is now truly a singleton without holding a context.
     private static UnityAudioBridge instance;
 
-    // Context is now a regular member variable, not static.
     private Context context;
     private MediaController mediaController;
     private ListenableFuture<MediaController> controllerFuture;
@@ -41,18 +38,24 @@ public class UnityAudioBridge {
 
     private UnityAudioBridge() {}
 
-    // CORRECTED: The context is now passed to getInstance and used immediately.
-    // This prevents storing the context in a static field.
     public static synchronized UnityAudioBridge getInstance(Context context) {
         if (instance == null) {
             instance = new UnityAudioBridge();
-            // The init method is called right after creation.
             instance.init(context);
         }
         return instance;
     }
 
-    // Init is now private, as it's called internally by getInstance.
+    /**
+     * NEW: A dummy static method.
+     * Its only purpose is to be called from Unity's C# to force ProGuard/R8
+     * to recognize this class as "in use" and prevent it from being stripped.
+     * @return A simple confirmation string.
+     */
+    public static String getDummyString() {
+        return "UnityAudioBridge is alive!";
+    }
+
     private void init(Context context) {
         this.context = context.getApplicationContext();
         Log.d(TAG, "UnityAudioBridge initializing...");
