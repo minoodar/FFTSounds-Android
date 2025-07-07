@@ -19,6 +19,7 @@ class VisualizerHelper {
         @JvmField
         val frequencyBands = _frequencyBands.asStateFlow()
 
+        // Frequency band definitions
         private const val BASS_LOWER_HZ = 20
         private const val BASS_UPPER_HZ = 250
         private const val MID_LOWER_HZ = 251

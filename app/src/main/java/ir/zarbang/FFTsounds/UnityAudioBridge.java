@@ -1,4 +1,5 @@
-package ir.zarbang.FFTsounds.bridge;
+// CORRECTED: Package declaration now matches the file's directory structure.
+package ir.zarbang.FFTsounds;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -26,16 +27,13 @@ import ir.zarbang.FFTsounds.fft.FrequencyBands;
 import ir.zarbang.FFTsounds.fft.VisualizerHelper;
 import ir.zarbang.FFTsounds.service.PlaybackService;
 
-/**
- * UnityAudioBridge serves as the single point of contact (Facade) for the Unity application.
- * It provides a clean, simple API to control the native Android audio engine.
- * This class is designed as a singleton to maintain a single connection to the MediaController.
- */
 public class UnityAudioBridge {
 
     private static final String TAG = "UnityAudioBridge";
+    // The instance is now truly a singleton without holding a context.
     private static UnityAudioBridge instance;
 
+    // Context is now a regular member variable, not static.
     private Context context;
     private MediaController mediaController;
     private ListenableFuture<MediaController> controllerFuture;
@@ -43,14 +41,19 @@ public class UnityAudioBridge {
 
     private UnityAudioBridge() {}
 
-    public static synchronized UnityAudioBridge getInstance() {
+    // CORRECTED: The context is now passed to getInstance and used immediately.
+    // This prevents storing the context in a static field.
+    public static synchronized UnityAudioBridge getInstance(Context context) {
         if (instance == null) {
             instance = new UnityAudioBridge();
+            // The init method is called right after creation.
+            instance.init(context);
         }
         return instance;
     }
 
-    public void init(Context context) {
+    // Init is now private, as it's called internally by getInstance.
+    private void init(Context context) {
         this.context = context.getApplicationContext();
         Log.d(TAG, "UnityAudioBridge initializing...");
         connectToService();
@@ -58,7 +61,7 @@ public class UnityAudioBridge {
 
     private void connectToService() {
         if (context == null) {
-            Log.e(TAG, "Context is null. Cannot connect to service. Did you call init()?");
+            Log.e(TAG, "Context is null. Cannot connect to service.");
             return;
         }
         SessionToken sessionToken = new SessionToken(context, new ComponentName(context, PlaybackService.class));
@@ -83,20 +86,30 @@ public class UnityAudioBridge {
         }, ContextCompat.getMainExecutor(context));
     }
 
-    public void play(String[] filePaths) {
-        if (context == null || filePaths == null || filePaths.length == 0) return;
+    public void play(String commaSeparatedFilePaths) {
+        if (context == null || commaSeparatedFilePaths == null || commaSeparatedFilePaths.isEmpty()) {
+            Log.e(TAG, "Cannot play. Input string is null or empty.");
+            return;
+        }
 
+        String[] filePaths = commaSeparatedFilePaths.split(",");
         ArrayList<Uri> uris = new ArrayList<>();
         ArrayList<String> displayNames = new ArrayList<>();
         for (String path : filePaths) {
-            File file = new File(path);
+            if (path.trim().isEmpty()) continue;
+            File file = new File(path.trim());
             if (file.exists()) {
                 uris.add(Uri.fromFile(file));
                 displayNames.add(file.getName());
+            } else {
+                Log.w(TAG, "File does not exist: " + path);
             }
         }
 
-        if (uris.isEmpty()) return;
+        if (uris.isEmpty()) {
+            Log.e(TAG, "No valid files found to play.");
+            return;
+        }
 
         Intent intent = new Intent(context, PlaybackService.class);
         intent.putParcelableArrayListExtra("URIS", uris);
@@ -109,34 +122,13 @@ public class UnityAudioBridge {
         }
     }
 
-    public void pause() {
-        if (mediaController != null) mediaController.pause();
-    }
+    public void pause() { if (mediaController != null) mediaController.pause(); }
+    public void resume() { if (mediaController != null) mediaController.play(); }
+    public void seekToNext() { if (mediaController != null) mediaController.seekToNextMediaItem(); }
+    public void seekToPrevious() { if (mediaController != null) mediaController.seekToPreviousMediaItem(); }
+    public void setShuffleMode(boolean enabled) { if (mediaController != null) mediaController.setShuffleModeEnabled(enabled); }
+    public void setRepeatMode(int mode) { if (mediaController != null) mediaController.setRepeatMode(mode); }
 
-    public void resume() {
-        if (mediaController != null) mediaController.play();
-    }
-
-    public void seekToNext() {
-        if (mediaController != null) mediaController.seekToNextMediaItem();
-    }
-
-    public void seekToPrevious() {
-        if (mediaController != null) mediaController.seekToPreviousMediaItem();
-    }
-
-    public void setShuffleMode(boolean enabled) {
-        if (mediaController != null) mediaController.setShuffleModeEnabled(enabled);
-    }
-
-    public void setRepeatMode(int mode) {
-        if (mediaController != null) mediaController.setRepeatMode(mode);
-    }
-
-    /**
-     * CORRECTED: Renamed to match the API specification for Unity.
-     * @return A JSON string, e.g., {"bass": 0.75, "mid": 0.4, "treble": 0.2}.
-     */
     public String getFrequencyDataJson() {
         FrequencyBands bands = VisualizerHelper.frequencyBands.getValue();
         JSONObject json = new JSONObject();
@@ -144,16 +136,10 @@ public class UnityAudioBridge {
             json.put("bass", bands.getBass());
             json.put("mid", bands.getMid());
             json.put("treble", bands.getTreble());
-        } catch (JSONException e) {
-            return "{}";
-        }
+        } catch (JSONException e) { return "{}"; }
         return json.toString();
     }
 
-    /**
-     * CORRECTED: Renamed to match the API specification for Unity.
-     * @return A JSON string, e.g., {"title": "MySong.mp3", "duration": 240000, "position": 120000, "isPlaying": true}.
-     */
     public String getCurrentTrackInfoJson() {
         JSONObject json = new JSONObject();
         if (mediaController != null && mediaController.getCurrentMediaItem() != null) {
@@ -170,9 +156,7 @@ public class UnityAudioBridge {
         return json.toString();
     }
 
-    public boolean isPlaying() {
-        return mediaController != null && mediaController.isPlaying();
-    }
+    public boolean isPlaying() { return mediaController != null && mediaController.isPlaying(); }
 
     public void release() {
         Log.d(TAG, "Releasing UnityAudioBridge resources.");

@@ -1,0 +1,13 @@
+<resources>
+    <!--
+      The app_name for a library module. This is not shown to the end-user
+      but is useful for system logs and identifying the component.
+    -->
+    <string name="app_name">FFTSounds Library</string>
+
+    <!--
+      A fallback string used in the PlaybackService if a track title
+      cannot be determined from the file's metadata.
+    -->
+    <string name="unknown_track">Unknown Track</string>
+</resources>
