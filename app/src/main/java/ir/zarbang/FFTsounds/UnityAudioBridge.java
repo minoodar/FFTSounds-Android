@@ -1,5 +1,4 @@
-// CORRECTED: Package declaration now matches the file's directory structure.
-package ir.zarbang.FFTsounds;
+package ir.zarbang.FFTsounds.bridge;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -48,13 +47,13 @@ public class UnityAudioBridge {
     }
 
     /**
-     * NEW: A dummy static method.
-     * Its only purpose is to be called from Unity's C# to force ProGuard/R8
-     * to recognize this class as "in use" and prevent it from being stripped.
+     * A dummy static method to be called from Unity's C# code.
+     * This creates a hard reference, forcing ProGuard/R8 to keep this class in the final build.
      * @return A simple confirmation string.
      */
     public static String getDummyString() {
-        return "UnityAudioBridge is alive!";
+        Log.d(TAG, "getDummyString called successfully. The bridge is alive.");
+        return "Keep-Alive";
     }
 
     private void init(Context context) {

@@ -54,7 +54,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.minoodar"
                 artifactId = "FFTSounds-Android"
-                version = "1.0.5" // New version for the final fix
+                version = "1.0.7" // Updated version for the new release
             }
         }
     }
